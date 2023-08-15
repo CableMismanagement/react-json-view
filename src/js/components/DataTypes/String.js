@@ -1,6 +1,7 @@
 import React from 'react';
 import DataTypeLabel from './DataTypeLabel';
 import { toType } from './../../helpers/util';
+import splitAndPushByDelimiter from './../../helpers/splitAndPushByDelimiter';
 
 //theme
 import Theme from './../../themes/getStyle';
@@ -39,15 +40,30 @@ export default class extends React.PureComponent {
 
     render() {
         const type_name = 'string';
-        const { collapsed } = this.state;
         const { props } = this;
         const { collapseStringsAfterLength, theme } = props;
         let { value } = props;
         let collapsible = toType(collapseStringsAfterLength) === 'integer';
-        let style = { style: { cursor: 'default' } };
+        let style = { cursor: 'default' };
+
+        if (props.highlightSearch && `"${value}"`.toLowerCase().includes(props.highlightSearch.toLowerCase())) {
+            return <div {...Theme(theme, 'string')}>
+                <DataTypeLabel type_name={type_name} {...props} />
+                {splitAndPushByDelimiter(`"${value}"`, props.highlightSearch).map((word, i) => [
+                    <span
+                        key={i}
+                        class="string-value"
+                        style={{backgroundColor: i%2 === 1 ? props.highlightSearchColor : 'transparent', ...style}}
+                        onClick={this.toggleCollapsed}
+                    >
+                        {word}
+                    </span>
+                ])}
+            </div>
+        }
 
         if (collapsible && value.length > collapseStringsAfterLength) {
-            style.style.cursor = 'pointer';
+            style.cursor = 'pointer';
             if (this.state.collapsed) {
                 value = (
                     <span>
@@ -63,7 +79,7 @@ export default class extends React.PureComponent {
                 <DataTypeLabel type_name={type_name} {...props} />
                 <span
                     class="string-value"
-                    {...style}
+                    style={style}
                     onClick={this.toggleCollapsed}
                 >
                     "{value}"

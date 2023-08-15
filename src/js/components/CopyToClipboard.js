@@ -61,19 +61,18 @@ export default class extends React.PureComponent {
     };
 
     getClippyIcon = () => {
-        const { theme } = this.props;
-
+        const { theme, customCopyIcon = null, customCopiedIcon = null } = this.props;
         if (this.state.copied) {
-            return (
+            return (customCopiedIcon || (
                 <span>
                     <Clippy class="copy-icon" {...Theme(theme, 'copy-icon')} />
                     <span {...Theme(theme, 'copy-icon-copied')}>✔</span>
                 </span>
-            );
+            ));
         }
 
-        return <Clippy class="copy-icon" {...Theme(theme, 'copy-icon')} />;
-    };
+        return customCopyIcon || <Clippy class="copy-icon" {...Theme(theme, 'copy-icon')} />;
+    }
 
     clipboardValue = value => {
         const type = toType(value);

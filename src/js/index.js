@@ -56,8 +56,14 @@ class ReactJsonView extends React.PureComponent {
         style: {},
         validationMessage: 'Validation Error',
         defaultValue: null,
-        displayArrayKey: true
-    };
+        displayArrayKey: true,
+        highlightSearch: null,
+        highlightSearchColor: 'rgb(255,253,84)',
+        highlightCurrentSearchColor: '#fe9b4a',
+        customCopyIcon: null,
+        customCopiedIcon: null,
+        customActions: []
+    }
 
     // will trigger whenever setState() is called, or parent passes in new props.
     static getDerivedStateFromProps(nextProps, prevState) {

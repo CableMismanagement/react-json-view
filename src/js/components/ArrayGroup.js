@@ -15,7 +15,7 @@ export default class extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            expanded: []
+            expanded: {}
         };
     }
 
@@ -24,9 +24,45 @@ export default class extends React.PureComponent {
         for (const j in this.state.expanded) {
             newExpanded.push(this.state.expanded[j]);
         }
-        newExpanded[i] = !newExpanded[i];
+    }
+
+    componentDidMount() {
+        this.updateExpandedGroups();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.highlightSearch !== this.props.highlightSearch) {
+            this.updateExpandedGroups();
+        }
+    }
+
+
+    updateExpandedGroups = () => {
+        const size = this.props.groupArraysAfterLength;
+        const groups = Math.ceil(this.props.src.length / size);
+        const expandedGroups = {};
+        for (let i in [...Array(groups)]) {
+            const groupSrc = this.props.src.slice(i * size, i * size + size)
+            const groupContainingSearch = this.props.highlightSearch && JSON.stringify(groupSrc).toLowerCase().includes(this.props.highlightSearch.toLowerCase());
+            if (groupContainingSearch) {
+                expandedGroups[i] = true;
+            }
+        }
+
         this.setState({
-            expanded: newExpanded
+            ...this.state,
+            expanded: expandedGroups
+        });
+    }
+
+    toggleCollapsed = (i) => {
+        const groupState = !this.state.expanded[i];
+        this.setState({
+            ...this.state,
+            expanded: {
+                ...this.state.expanded,
+                [i]: groupState,
+            }
         });
     };
 

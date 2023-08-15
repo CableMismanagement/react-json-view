@@ -6,6 +6,7 @@ import dispatcher from './../helpers/dispatcher';
 import parseInput from './../helpers/parseInput';
 import stringifyVariable from './../helpers/stringifyVariable';
 import CopyToClipboard from './CopyToClipboard';
+import splitAndPushByDelimiter from './../helpers/splitAndPushByDelimiter';
 
 //data type components
 import {
@@ -18,7 +19,7 @@ import {
     JsonNull,
     JsonRegexp,
     JsonString,
-    JsonUndefined
+    JsonUndefined,
 } from './DataTypes/DataTypes';
 
 //clibboard icon
@@ -37,8 +38,8 @@ class VariableEditor extends React.PureComponent {
             renameKey: false,
             parsedInput: {
                 type: false,
-                value: null
-            }
+                value: null,
+            },
         };
     }
 
@@ -55,95 +56,89 @@ class VariableEditor extends React.PureComponent {
             onDelete,
             onSelect,
             displayArrayKey,
-            quotesOnKeys
+            quotesOnKeys,
+            highlightSearch,
+            highlightSearchColor,
+            rjvId,
+            customCopyIcon,
+            customCopiedIcon,
+            customActions = []
         } = this.props;
         const { editMode } = this.state;
         return (
             <div
                 {...Theme(theme, 'objectKeyVal', {
-                    paddingLeft: indentWidth * singleIndent
+                    paddingLeft: indentWidth * singleIndent,
                 })}
-                onMouseEnter={() =>
-                    this.setState({ ...this.state, hovered: true })
-                }
-                onMouseLeave={() =>
-                    this.setState({ ...this.state, hovered: false })
-                }
-                class="variable-row"
+                class='variable-row'
                 key={variable.name}
             >
                 {type == 'array' ? (
-                    displayArrayKey ? (
-                        <span
-                            {...Theme(theme, 'array-key')}
-                            key={variable.name + '_' + namespace}
-                        >
-                            {variable.name}
-                            <div {...Theme(theme, 'colon')}>:</div>
-                        </span>
-                    ) : null
+                    <span {...Theme(theme, 'array-key')} key={variable.name + '_' + namespace}>
+                        {variable.name}
+                        <div {...Theme(theme, 'colon')}>:</div>
+                    </span>
                 ) : (
                     <span>
-                        <span
-                            {...Theme(theme, 'object-name')}
-                            class="object-key"
-                            key={variable.name + '_' + namespace}
-                        >
-                            {!!quotesOnKeys && (
-                                <span style={{ verticalAlign: 'top' }}>"</span>
-                            )}
-                            <span style={{ display: 'inline-block' }}>
-                                {variable.name}
-                            </span>
-                            {!!quotesOnKeys && (
-                                <span style={{ verticalAlign: 'top' }}>"</span>
-                            )}
+                        <span {...Theme(theme, 'object-name')} class='object-key' key={variable.name + '_' + namespace}>
+                            <span style={{ verticalAlign: 'top' }}>"</span>
+                            {splitAndPushByDelimiter(variable.name, highlightSearch).map((word, i) => (
+                                    <span
+                                        key={i}
+                                        style={{
+                                            display: 'inline-block',
+                                            backgroundColor: i % 2 === 1 ? highlightSearchColor : 'transparent',
+                                        }}
+                                    >
+                                        {word}
+                                    </span>
+                            ))}
+                            <span style={{ verticalAlign: 'top' }}>"</span>
                         </span>
                         <span {...Theme(theme, 'colon')}>:</span>
                     </span>
                 )}
                 <div
-                    class="variable-value"
+                    class='variable-value'
                     onClick={
                         onSelect === false && onEdit === false
                             ? null
-                            : e => {
+                            : (e) => {
                                   let location = [...namespace];
-                                  if (
-                                      (e.ctrlKey || e.metaKey) &&
-                                      onEdit !== false
-                                  ) {
+                                  if ((e.ctrlKey || e.metaKey) && onEdit !== false) {
                                       this.prepopInput(variable);
                                   } else if (onSelect !== false) {
                                       location.shift();
                                       onSelect({
                                           ...variable,
-                                          namespace: location
+                                          namespace: location,
                                       });
                                   }
                               }
                     }
                     {...Theme(theme, 'variableValue', {
-                        cursor: onSelect === false ? 'default' : 'pointer'
+                        cursor: onSelect === false ? 'default' : 'pointer',
                     })}
                 >
                     {this.getValue(variable, editMode)}
                 </div>
                 {enableClipboard ? (
                     <CopyToClipboard
-                        rowHovered={this.state.hovered}
+                        customCopiedIcon={customCopiedIcon}
+                        customCopyIcon={customCopyIcon}
                         hidden={editMode}
                         src={variable.value}
                         clickCallback={enableClipboard}
                         {...{ theme, namespace: [...namespace, variable.name] }}
                     />
                 ) : null}
-                {onEdit !== false && editMode == false
-                    ? this.getEditIcon()
-                    : null}
-                {onDelete !== false && editMode == false
-                    ? this.getRemoveIcon()
-                    : null}
+                {onEdit !== false && editMode == false ? this.getEditIcon() : null}
+                {onDelete !== false && editMode == false ? this.getRemoveIcon() : null}
+                {customActions.map(({ icon, onClick }, index) => (
+                    <span key={index} onClick={() => onClick(variable)} className="custom-action">
+                        {icon}
+                    </span>
+                ))}
             </div>
         );
     }
@@ -152,15 +147,9 @@ class VariableEditor extends React.PureComponent {
         const { variable, theme } = this.props;
 
         return (
-            <div
-                class="click-to-edit"
-                style={{
-                    verticalAlign: 'top',
-                    display: this.state.hovered ? 'inline-block' : 'none'
-                }}
-            >
+            <div class='click-to-edit' style={{ verticalAlign: 'top' }}>
                 <Edit
-                    class="click-to-edit-icon"
+                    class='click-to-edit-icon'
                     {...Theme(theme, 'editVarIcon')}
                     onClick={() => {
                         this.prepopInput(variable);
@@ -170,7 +159,7 @@ class VariableEditor extends React.PureComponent {
         );
     };
 
-    prepopInput = variable => {
+    prepopInput = (variable) => {
         if (this.props.onEdit !== false) {
             const stringifiedValue = stringifyVariable(variable.value);
             const detected = parseInput(stringifiedValue);
@@ -179,8 +168,8 @@ class VariableEditor extends React.PureComponent {
                 editValue: stringifiedValue,
                 parsedInput: {
                     type: detected.type,
-                    value: detected.value
-                }
+                    value: detected.value,
+                },
             });
         }
     };
@@ -189,15 +178,9 @@ class VariableEditor extends React.PureComponent {
         const { variable, namespace, theme, rjvId } = this.props;
 
         return (
-            <div
-                class="click-to-remove"
-                style={{
-                    verticalAlign: 'top',
-                    display: this.state.hovered ? 'inline-block' : 'none'
-                }}
-            >
+            <div class='click-to-remove' style={{ verticalAlign: 'top' }}>
                 <Remove
-                    class="click-to-remove-icon"
+                    class='click-to-remove-icon'
                     {...Theme(theme, 'removeVarIcon')}
                     onClick={() => {
                         dispatcher.dispatch({
@@ -207,8 +190,8 @@ class VariableEditor extends React.PureComponent {
                                 name: variable.name,
                                 namespace: namespace,
                                 existing_value: variable.value,
-                                variable_removed: true
-                            }
+                                variable_removed: true,
+                            },
                         });
                     }}
                 />
@@ -259,27 +242,27 @@ class VariableEditor extends React.PureComponent {
         return (
             <div>
                 <AutosizeTextarea
-                    type="text"
-                    inputRef={input => input && input.focus()}
+                    type='text'
+                    inputRef={(input) => input && input.focus()}
                     value={editValue}
-                    class="variable-editor"
-                    onChange={event => {
+                    class='variable-editor'
+                    onChange={(event) => {
                         const value = event.target.value;
                         const detected = parseInput(value);
                         this.setState({
                             editValue: value,
                             parsedInput: {
                                 type: detected.type,
-                                value: detected.value
-                            }
+                                value: detected.value,
+                            },
                         });
                     }}
-                    onKeyDown={e => {
+                    onKeyDown={(e) => {
                         switch (e.key) {
                             case 'Escape': {
                                 this.setState({
                                     editMode: false,
-                                    editValue: ''
+                                    editValue: '',
                                 });
                                 break;
                             }
@@ -298,14 +281,14 @@ class VariableEditor extends React.PureComponent {
                 />
                 <div {...Theme(theme, 'edit-icon-container')}>
                     <Remove
-                        class="edit-cancel"
+                        class='edit-cancel'
                         {...Theme(theme, 'cancel-icon')}
                         onClick={() => {
                             this.setState({ editMode: false, editValue: '' });
                         }}
                     />
                     <CheckCircle
-                        class="edit-check string-value"
+                        class='edit-check string-value'
                         {...Theme(theme, 'check-icon')}
                         onClick={() => {
                             this.submitEdit();
@@ -317,7 +300,7 @@ class VariableEditor extends React.PureComponent {
         );
     };
 
-    submitEdit = submit_detected => {
+    submitEdit = (submit_detected) => {
         const { variable, namespace, rjvId } = this.props;
         const { editValue, parsedInput } = this.state;
         let new_value = editValue;
@@ -325,7 +308,7 @@ class VariableEditor extends React.PureComponent {
             new_value = parsedInput.value;
         }
         this.setState({
-            editMode: false
+            editMode: false,
         });
         dispatcher.dispatch({
             name: 'VARIABLE_UPDATED',
@@ -335,8 +318,8 @@ class VariableEditor extends React.PureComponent {
                 namespace: namespace,
                 existing_value: variable.value,
                 new_value: new_value,
-                variable_removed: false
-            }
+                variable_removed: false,
+            },
         });
     };
 
@@ -350,11 +333,11 @@ class VariableEditor extends React.PureComponent {
                     <div {...Theme(theme, 'detected-row')}>
                         {detected}
                         <CheckCircle
-                            class="edit-check detected"
+                            class='edit-check detected'
                             style={{
                                 verticalAlign: 'top',
                                 paddingLeft: '3px',
-                                ...Theme(theme, 'check-icon').style
+                                ...Theme(theme, 'check-icon').style,
                             }}
                             onClick={() => {
                                 this.submitEdit(true);
@@ -380,7 +363,7 @@ class VariableEditor extends React.PureComponent {
                             <span
                                 style={{
                                     ...Theme(theme, 'brace').style,
-                                    cursor: 'default'
+                                    cursor: 'default',
                                 }}
                             >
                                 {'{'}
@@ -388,7 +371,7 @@ class VariableEditor extends React.PureComponent {
                             <span
                                 style={{
                                     ...Theme(theme, 'ellipsis').style,
-                                    cursor: 'default'
+                                    cursor: 'default',
                                 }}
                             >
                                 ...
@@ -396,7 +379,7 @@ class VariableEditor extends React.PureComponent {
                             <span
                                 style={{
                                     ...Theme(theme, 'brace').style,
-                                    cursor: 'default'
+                                    cursor: 'default',
                                 }}
                             >
                                 {'}'}
@@ -409,7 +392,7 @@ class VariableEditor extends React.PureComponent {
                             <span
                                 style={{
                                     ...Theme(theme, 'brace').style,
-                                    cursor: 'default'
+                                    cursor: 'default',
                                 }}
                             >
                                 {'['}
@@ -417,7 +400,7 @@ class VariableEditor extends React.PureComponent {
                             <span
                                 style={{
                                     ...Theme(theme, 'ellipsis').style,
-                                    cursor: 'default'
+                                    cursor: 'default',
                                 }}
                             >
                                 ...
@@ -425,7 +408,7 @@ class VariableEditor extends React.PureComponent {
                             <span
                                 style={{
                                     ...Theme(theme, 'brace').style,
-                                    cursor: 'default'
+                                    cursor: 'default',
                                 }}
                             >
                                 {']'}

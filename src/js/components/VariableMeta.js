@@ -114,7 +114,9 @@ export default class extends React.PureComponent {
             enableClipboard,
             src,
             namespace,
-            rowHovered
+            rowHovered,
+            customCopyIcon,
+            customCopiedIcon
         } = this.props;
         return (
             <div

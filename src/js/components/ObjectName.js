@@ -1,5 +1,6 @@
 import React from 'react';
 import Theme from './../themes/getStyle';
+import splitAndPushByDelimiter from './../helpers/splitAndPushByDelimiter';
 
 export default function getObjectName(props) {
     const {
@@ -9,7 +10,9 @@ export default function getObjectName(props) {
         theme,
         jsvRoot,
         name,
-        displayArrayKey
+        displayArrayKey,
+        highlightSearch,
+        highlightSearchColor
     } = props;
 
     const display_name = props.name ? props.name : '';
@@ -19,7 +22,7 @@ export default function getObjectName(props) {
     } else if (parent_type == 'array') {
         return displayArrayKey ? (
             <span {...Theme(theme, 'array-key')} key={namespace}>
-                <span class="array-key">{display_name}</span>
+                <span class='array-key'>{display_name}</span>
                 <span {...Theme(theme, 'colon')}>:</span>
             </span>
         ) : (
@@ -28,14 +31,20 @@ export default function getObjectName(props) {
     } else {
         return (
             <span {...Theme(theme, 'object-name')} key={namespace}>
-                <span class="object-key">
-                    {quotesOnKeys && (
-                        <span style={{ verticalAlign: 'top' }}>"</span>
-                    )}
-                    <span>{display_name}</span>
-                    {quotesOnKeys && (
-                        <span style={{ verticalAlign: 'top' }}>"</span>
-                    )}
+                <span class='object-key'>
+                    <span style={{ verticalAlign: 'top' }}>"</span>
+                    {splitAndPushByDelimiter(display_name, highlightSearch).map((word, i) => (
+                            <span
+                                key={i}
+                                style={{
+                                    backgroundColor: i % 2 === 1 ? highlightSearchColor : 'transparent',
+                                }}
+                            >
+                                {word}
+                            </span>
+                        ))
+                    }
+                    <span style={{ verticalAlign: 'top' }}>"</span>
                 </span>
                 <span {...Theme(theme, 'colon')}>:</span>
             </span>

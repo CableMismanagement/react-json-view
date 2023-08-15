@@ -9,10 +9,11 @@ import Moment from 'moment';
 //import the react-json-view component (installed with npm)
 import JsonViewer from './../../src/js/index';
 
-//render 2 different examples of the react-json-view component
-ReactDom.render(
-    <div>
-        {/* just pass in your JSON to the src attribute */}
+const App = () => {
+    const [search, setSearch] = React.useState('IS A')
+
+    return <div>
+        Search: <input value={search} onChange={e => setSearch(e.target.value)} />
         <JsonViewer
             sortKeys
             style={{ padding: '30px', backgroundColor: 'white' }}
@@ -159,7 +160,8 @@ ReactDom.render(
                 base0E: 'rgba(70, 70, 230, 1)',
                 base0F: 'rgba(70, 70, 230, 1)'
             }}
-        />
+        /></div>
+}
 
         <JsonViewer
             theme="hopscotch"
@@ -200,7 +202,6 @@ function getExampleJson1() {
         },
         string_number: '1234',
         date: new Date(),
-        moment: Moment(),
         regexp: /[0-9]/gi
     };
 }
